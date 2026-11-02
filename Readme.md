@@ -3,7 +3,7 @@
 ## How to run it
 
 ```bash
-git clone git@github.com:joefazee/learning-go-hnews.git 
+git clone https://github.com/Ryan7557/learn-go-hnews
 cd learning-go-hnews
 go mod tidy 
 go run .
