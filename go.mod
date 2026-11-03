@@ -7,7 +7,11 @@ require (
 	github.com/golangcollege/sessions v1.2.0
 	github.com/justinas/alice v1.2.0
 	github.com/mattn/go-sqlite3 v1.14.52
-	golang.org/x/crypto v0.58.0
+	github.com/stretchr/testify v1.12.1
+	golang.org/x/crypto v0.58.1-0.20261009181718-2f1f834330b2
 )
 
-require golang.org/x/sys v0.49.0 // indirect
+require (
+	go.yaml.in/yaml/v3 v3.0.5 // indirect
+	golang.org/x/sys v0.49.0 // indirect
+)
