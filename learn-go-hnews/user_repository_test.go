@@ -36,7 +36,35 @@ func TestSQLUserRepository_CreateUser_DuplicateEmail(t *testing.T) {
 
 	_, err = repo.CreateUser("John Doe", "john@doe.com", "testpassword", "avatar")
 	assert.Error(t, err)
-	
+
+}
+
+func TestSQLUserRepository_Authentication_Success(t *testing.T) {
+	defer cleanupTestData(t)
+
+	repo := NewSQLUserRepository(testDB)
+
+	currentUserID, err := repo.CreateUser("John Doe", "john@doe.com", "testpassword", "avatar")
+	assert.Nil(t, err)
+	assert.Greater(t, currentUserID, 0)
+
+	authUserID, err := repo.Authenticate("john@doe.com", "testpassword")
+	assert.NoError(t, err)
+	assert.Equal(t, currentUserID, authUserID)
+}
+
+func TestSQLUserRepository_Authentication_Failure(t *testing.T) {
+	defer cleanupTestData(t)
+
+	repo := NewSQLUserRepository(testDB)
+
+	currentUserID, err := repo.CreateUser("John Doe", "john@doe.com", "testpassword", "avatar")
+	assert.Nil(t, err)
+	assert.Greater(t, currentUserID, 0)
+
+	_, err = repo.Authenticate("john@doe.com", "wrongpassword")
+	assert.Error(t, err)
+	assert.Equal(t, ErrInvalidCredential, err)
 }
 
 func generateString(n int) string {
