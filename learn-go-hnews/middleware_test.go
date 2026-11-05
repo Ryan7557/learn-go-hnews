@@ -29,3 +29,20 @@ func TestLogger(t *testing.T) {
 	assert.Equal(t, "OK", w.Body.String())
 	assert.Contains(t, buf.String(), "HTTP/1.1 GET /test")
 }
+
+func TestRecover(t *testing.T) {
+	panicHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		panic("test panic")
+	})
+
+	handler := testApp.recover(panicHandler)
+	req := httptest.NewRequest(http.MethodGet, "/test", nil)
+	w := httptest.NewRecorder()
+
+	handler.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
+	assert.Equal(t, "Internal Server Error\n", w.Body.String())
+	assert.Equal(t, "close", w.Header().Get("Connection"))
+
+}
