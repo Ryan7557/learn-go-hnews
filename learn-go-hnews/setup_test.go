@@ -35,18 +35,22 @@ func TestMain(m *testing.M) {
 }
 
 func setupApp(db *sql.DB) *application {
-	sess := sessions.New([]byte("super-secret-session-key-very-long-32-bytes"))
-	sess.Lifetime = 24 * time.Hour
+	session := sessions.New([]byte("u46IpCV9y5VlurXXXODJEhgOY8m9JVE4"))
+	session.Lifetime = 24 * time.Hour
+	session.Secure = true
 
-	return &application{
+	app := &application{
 		errorLog:    log.New(io.Discard, "", 0),
 		infoLog:     log.New(io.Discard, "", 0),
 		userRepo:    NewSQLUserRepository(db),
 		postRepo:    NewSQLPostRepository(db),
 		templateDir: "./templates",
 		publicPath:  "./public",
-		session:     sess,
+		session:     session,
 	}
+
+	app.tp = NewTemplateRenderer(app.templateDir, false)
+	return app
 }
 
 func setupTestSchema(db *sql.DB) error {

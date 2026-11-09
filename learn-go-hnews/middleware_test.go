@@ -86,6 +86,51 @@ func TestRequireAuth_NotAuthenticated(t *testing.T) {
 
 }
 
+func TestAuthenticate_ValidSession(t *testing.T) {
+	defer cleanupTestData(t)
+	userID, err := testApp.userRepo.CreateUser(
+		"session user",
+		"session@test.com",
+		"passwordgood",
+		"avatar",
+	)
+	assert.NoError(t, err)
+	assert.Greater(t, userID, 0)
+
+	setupHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		testApp.session.Put(r, loggedInUserKey, "session@test.com")
+		w.WriteHeader(http.StatusOK)
+	})
+
+	testHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.True(t, testApp.isAuthenticated(r))
+		user := testApp.getUserFromContext(r.Context())
+		assert.Equal(t, userID, user.ID)
+		assert.Equal(t, "session@test.com", user.Email)
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("OK"))
+	})
+
+	setupChain := testApp.session.Enable(setupHandler)
+	req1 := httptest.NewRequest(http.MethodGet, "/setup", nil)
+	w1 := httptest.NewRecorder()
+	setupChain.ServeHTTP(w1, req1)
+
+	testChain := testApp.session.Enable(testApp.authenticate(testHandler))
+	req2 := httptest.NewRequest(http.MethodGet, "/test", nil)
+	if cookies := w1.Result().Cookies(); len(cookies) > 0 {
+		for _, cookie := range cookies {
+			req2.AddCookie(cookie)
+		}
+	}
+
+	w2 := httptest.NewRecorder()
+	testChain.ServeHTTP(w2, req2)
+	assert.Equal(t, http.StatusOK, w2.Code)
+	assert.Equal(t, "OK", w2.Body.String())
+
+}
+
 func contextWithAuth(ctx context.Context, isAuth interface{}) context.Context {
 	return context.WithValue(ctx, contextAuthKey, isAuth)
 }
